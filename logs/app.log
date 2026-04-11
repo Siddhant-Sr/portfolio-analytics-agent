@@ -1,0 +1,141 @@
+2026-04-05 10:35:25,765 | ERROR | __main__ | Database connection error: unable to open database file
+2026-04-05 10:42:25,148 | INFO | __main__ | Connected to database: D:\Pl_Capitals_Assignment\portfolio-analytics-agent\data\db\portfolio_database.db
+2026-04-05 11:13:03,904 | INFO | src.database.db_connection | Connected to database: D:\Pl_Capitals_Assignment\portfolio-analytics-agent\data\db\portfolio_database.db
+2026-04-05 11:13:09,885 | INFO | __main__ | Database schema executed successfully
+2026-04-05 11:14:50,497 | INFO | src.database.db_connection | Connected to database: D:\Pl_Capitals_Assignment\portfolio-analytics-agent\data\db\portfolio_database.db
+2026-04-05 15:57:47,489 | INFO | src.database.db_connection | Connected to database: D:\Pl_Capitals_Assignment\portfolio-analytics-agent\data\db\portfolio_database.db
+2026-04-05 15:57:47,492 | INFO | __main__ | Database schema executed successfully
+2026-04-05 15:57:47,493 | INFO | src.database.db_connection | Connected to database: D:\Pl_Capitals_Assignment\portfolio-analytics-agent\data\db\portfolio_database.db
+2026-04-05 15:57:50,036 | INFO | __main__ | Loaded 10 rows into sectors
+2026-04-05 15:57:50,831 | INFO | __main__ | Loaded 30 rows into securities
+2026-04-05 15:57:51,074 | INFO | __main__ | Loaded 13 rows into benchmarks
+2026-04-05 15:57:51,259 | INFO | __main__ | Loaded 13 rows into portfolios
+2026-04-05 15:57:51,696 | INFO | __main__ | Loaded 95 rows into holdings
+2026-04-05 15:57:52,003 | INFO | __main__ | Loaded 24 rows into transactions
+2026-04-05 15:57:52,310 | INFO | __main__ | Loaded 330 rows into historical_prices
+2026-04-05 15:57:52,550 | INFO | __main__ | Loaded 44 rows into portfolio_performance
+2026-04-05 15:57:52,779 | INFO | __main__ | Loaded 44 rows into risk_metrics
+2026-04-05 15:57:52,780 | INFO | __main__ | All CSV data loaded successfully
+2026-04-05 19:25:14,431 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 19:25:14,686 | INFO | src.tools.exposure_tool | Calculating sector exposure for identifier=international equity
+2026-04-05 19:25:14,687 | INFO | src.database.db_connection | Connecting to database at D:\Pl_Capitals_Assignment\portfolio-analytics-agent\data\db\portfolio_database.db
+2026-04-05 19:25:15,050 | INFO | src.database.db_connection | Database connected
+2026-04-05 19:25:15,050 | INFO | src.database.db_connection | Dialect: sqlite
+2026-04-05 19:25:15,051 | INFO | src.database.db_connection | Available tables: ['benchmarks', 'historical_prices', 'holdings', 'portfolio_performance', 'portfolios', 'risk_metrics', 'sectors', 'securities', 'transactions']
+2026-04-05 19:25:15,053 | INFO | src.tools.exposure_tool | Resolved portfolio 'international equity' to id 7
+2026-04-05 19:25:15,054 | INFO | src.tools.exposure_tool | Exposure query executed successfully
+2026-04-05 19:25:15,054 | INFO | src.tools.exposure_tool | Raw result: [('Energy', 0.38), ('Technology', 0.36), ('Automotive', 0.15), ('Consumer Staples', 0.11)]
+2026-04-05 19:25:15,056 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 19:26:07,548 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 19:26:09,254 | INFO | src.tools.sql_query_tool | User Question: SELECT portfolio_id, SUM(CASE WHEN sector = 'Technology' THEN value ELSE 0 END) AS tech_value, SUM(value) AS total_value, (SUM(CASE WHEN sector = 'Technology' THEN value ELSE 0 END) / SUM(value)) * 100 AS tech_percentage FROM holdings GROUP BY portfolio_id
+2026-04-05 19:26:09,254 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT h.portfolio_id, SUM(CASE WHEN s.sector_id IN (SELECT sector_id FROM sectors WHERE sector_name = 'Technology') THEN h.quantity * s.current_price ELSE 0 END) AS tech_value, SUM(h.quantity * s.current_price) AS total_value, (SUM(CASE WHEN s.sector_id IN (SELECT sector_id FROM sectors WHERE sector_name = 'Technology') THEN h.quantity * s.current_price ELSE 0 END) / SUM(h.quantity * s.current_price)) * 100 AS tech_percentage FROM holdings h JOIN securities s ON h.security_id = s.security_id WHERE s.asset_type = 'Stock' GROUP BY h.portfolio_id
+2026-04-05 19:26:09,256 | INFO | src.tools.sql_query_tool | Query Result: [(1, 1866148.0, 2204148.0, 84.66527656037617), (2, 0, 891920.0, 0.0), (3, 1565292.5, 1565292.5, 100.0), (4, 388704.0, 772304.0, 50.33043982680395), (5, 272978.0, 1007228.0, 27.101907413217262), (6, 0, 758085.0, 0.0), (7, 346888.0, 734928.0, 47.20026995841769), (9, 0, 944180.0, 0.0), (10, 339095.0, 1045100.0, 32.44617739929193), (11, 3093520.0, 6622340.0, 46.713397379174125), (13, 1427086.0, 2281686.0, 62.545240668523185)]
+2026-04-05 19:26:09,257 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 19:26:11,382 | INFO | src.tools.sql_query_tool | User Question: SELECT p.portfolio_name, SUM(CASE WHEN s.sector = 'Technology' THEN h.value ELSE 0 END) AS tech_value, SUM(h.value) AS total_value, (SUM(CASE WHEN s.sector = 'Technology' THEN h.value ELSE 0 END) / SUM(h.value)) * 100 AS tech_percentage FROM holdings h JOIN portfolios p ON h.portfolio_id = p.portfolio_id JOIN securities s ON h.security_id = s.security_id GROUP BY p.portfolio_name
+2026-04-05 19:26:11,382 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT p.portfolio_name, SUM(CASE WHEN sec.sector_name = 'Technology' THEN h.quantity * s.current_price ELSE 0 END) AS tech_value, SUM(h.quantity * s.current_price) AS total_value, (SUM(CASE WHEN sec.sector_name = 'Technology' THEN h.quantity * s.current_price ELSE 0 END) / SUM(h.quantity * s.current_price)) * 100 AS tech_percentage FROM holdings h JOIN portfolios p ON h.portfolio_id = p.portfolio_id JOIN securities s ON h.security_id = s.security_id JOIN sectors sec ON s.sector_id = sec.sector_id WHERE s.asset_type = 'Stock' GROUP BY p.portfolio_name
+2026-04-05 19:26:11,384 | INFO | src.tools.sql_query_tool | Query Result: [('Balanced Portfolio', 388704.0, 772304.0, 50.33043982680395), ('Conservative Income Fund', 0, 891920.0, 0.0), ('Dividend Aristocrats Fund', 0, 944180.0, 0.0), ('ESG Sustainable Fund', 272978.0, 1007228.0, 27.101907413217262), ('Emerging Markets Fund', 339095.0, 1045100.0, 32.44617739929193), ('Growth Equity Fund', 1866148.0, 2204148.0, 84.66527656037617), ('International Equity Fund', 346888.0, 734928.0, 47.20026995841769), ('Small Cap Value Fund', 0, 758085.0, 0.0), ('Tech Innovation Fund', 1565292.5, 1565292.5, 100.0), ('Total International Index Fund', 1427086.0, 2281686.0, 62.545240668523185), ('Total Stock Market Index Fund', 3093520.0, 6622340.0, 46.713397379174125)]
+2026-04-05 19:26:11,386 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 21:42:48,937 | INFO | src.database.db_connection | Connecting to database at D:\Pl_Capitals_Assignment\portfolio-analytics-agent\data\db\portfolio_database.db
+2026-04-05 21:42:49,272 | INFO | src.database.db_connection | Database connected
+2026-04-05 21:42:49,273 | INFO | src.database.db_connection | Dialect: sqlite
+2026-04-05 21:42:49,273 | INFO | src.database.db_connection | Available tables: ['benchmarks', 'historical_prices', 'holdings', 'portfolio_performance', 'portfolios', 'risk_metrics', 'sectors', 'securities', 'transactions']
+2026-04-05 21:42:49,502 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 21:42:51,679 | INFO | src.tools.sql_query_tool | User Question: What is the total number of portfolios?
+2026-04-05 21:42:51,680 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT COUNT(portfolio_id) FROM portfolios;
+2026-04-05 21:42:51,683 | INFO | src.tools.sql_query_tool | Query Result: [(13,)]
+2026-04-05 21:42:51,685 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 21:42:54,031 | INFO | src.tools.sql_query_tool | User Question: What is the total number of portfolios?
+2026-04-05 21:42:54,032 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT COUNT(portfolio_id) FROM portfolios;
+2026-04-05 21:42:54,034 | INFO | src.tools.sql_query_tool | Query Result: [(13,)]
+2026-04-05 21:42:54,037 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 21:42:54,454 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 21:42:56,418 | INFO | src.tools.sql_query_tool | User Question: What are the names of all active portfolios?
+2026-04-05 21:42:56,420 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT portfolio_name FROM portfolios WHERE status = 'Active';
+2026-04-05 21:42:56,421 | INFO | src.tools.sql_query_tool | Query Result: [('Growth Equity Fund',), ('Conservative Income Fund',), ('Tech Innovation Fund',), ('Balanced Portfolio',), ('ESG Sustainable Fund',), ('Small Cap Value Fund',), ('International Equity Fund',), ('Fixed Income Plus',), ('Dividend Aristocrats Fund',), ('Emerging Markets Fund',)]
+2026-04-05 21:42:56,424 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 21:42:56,643 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 21:42:58,335 | INFO | src.tools.sql_query_tool | User Question: Which securities are in the Technology sector?
+2026-04-05 21:42:58,336 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT symbol, company_name FROM securities WHERE sector_id = (SELECT sector_id FROM sectors WHERE sector_name = 'Technology') AND asset_type = 'Stock';
+2026-04-05 21:42:58,339 | INFO | src.tools.sql_query_tool | Query Result: [('AAPL', 'Apple Inc.'), ('MSFT', 'Microsoft Corporation'), ('GOOGL', 'Alphabet Inc.'), ('META', 'Meta Platforms Inc.'), ('NVDA', 'NVIDIA Corporation'), ('AVGO', 'Broadcom Inc.'), ('CRM', 'Salesforce Inc.'), ('ORCL', 'Oracle Corporation')]
+2026-04-05 21:42:58,341 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 21:42:58,697 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 21:43:12,357 | INFO | src.tools.sql_query_tool | User Question: SELECT SUM(aum) FROM portfolios WHERE target_risk_level = 'High'
+2026-04-05 21:43:12,358 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT SUM(total_aum) FROM portfolios WHERE target_risk_level = 'High'
+2026-04-05 21:43:12,361 | INFO | src.tools.sql_query_tool | Query Result: [(85000000.0,)]
+2026-04-05 21:43:12,363 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 21:43:14,862 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 21:43:29,513 | INFO | src.tools.sql_query_tool | User Question: What are the top 5 holdings by cost basis in the Growth Equity Fund?
+2026-04-05 21:43:29,514 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT T1.security_id, T2.company_name, T2.symbol, T1.cost_basis FROM holdings AS T1 INNER JOIN securities AS T2 ON T1.security_id = T2.security_id INNER JOIN portfolios AS T3 ON T1.portfolio_id = T3.portfolio_id WHERE T3.portfolio_name = 'Growth Equity Fund' ORDER BY T1.cost_basis DESC LIMIT 5;
+2026-04-05 21:43:29,517 | INFO | src.tools.sql_query_tool | Query Result: [(1, 'Apple Inc.', 'AAPL', 438000.0), (4, 'Amazon.com Inc.', 'AMZN', 320000.0), (2, 'Microsoft Corporation', 'MSFT', 304400.0), (7, 'NVIDIA Corporation', 'NVDA', 288040.0), (19, 'Salesforce Inc.', 'CRM', 185400.0)]
+2026-04-05 21:43:29,519 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 21:43:32,881 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 21:43:48,527 | INFO | src.tools.sql_query_tool | User Question: average current price of securities in each sector
+2026-04-05 21:43:48,528 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT T1.sector_name, AVG(T2.current_price) AS average_current_price FROM sectors T1 INNER JOIN securities T2 ON T1.sector_id = T2.sector_id WHERE T2.asset_type = 'Stock' GROUP BY T1.sector_name
+2026-04-05 21:43:48,530 | INFO | src.tools.sql_query_tool | Query Result: [('Automotive', 248.5), ('Consumer Discretionary', 3380.0), ('Consumer Staples', 173.8625), ('Energy', 128.575), ('Financials', 201.2125), ('Healthcare', 285.17), ('Technology', 719.245)]
+2026-04-05 21:43:48,532 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 21:43:50,928 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 21:44:07,041 | INFO | src.tools.sql_query_tool | User Question: SELECT portfolio_name, SUM(CASE WHEN sector = 'Technology' THEN value ELSE 0 END) AS tech_value, (SUM(CASE WHEN sector = 'Technology' THEN value ELSE 0 END) / SUM(value)) * 100 AS tech_percentage FROM portfolio_data GROUP BY portfolio_name, SUM(value)
+2026-04-05 21:44:07,042 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT p.portfolio_name, SUM(CASE WHEN s.sector_id = 1 THEN h.quantity * se.current_price ELSE 0 END) AS tech_value, (SUM(CASE WHEN s.sector_id = 1 THEN h.quantity * se.current_price ELSE 0 END) / SUM(h.quantity * se.current_price)) * 100 AS tech_percentage FROM portfolios p JOIN holdings h ON p.portfolio_id = h.portfolio_id JOIN securities se ON h.security_id = se.security_id JOIN sectors s ON se.sector_id = s.sector_id WHERE se.asset_type = 'Stock' GROUP BY p.portfolio_name
+2026-04-05 21:44:07,045 | INFO | src.tools.sql_query_tool | Query Result: [('Balanced Portfolio', 388704.0, 50.33043982680395), ('Conservative Income Fund', 0, 0.0), ('Dividend Aristocrats Fund', 0, 0.0), ('ESG Sustainable Fund', 272978.0, 27.101907413217262), ('Emerging Markets Fund', 339095.0, 32.44617739929193), ('Growth Equity Fund', 1866148.0, 84.66527656037617), ('International Equity Fund', 346888.0, 47.20026995841769), ('Small Cap Value Fund', 0, 0.0), ('Tech Innovation Fund', 1565292.5, 100.0), ('Total International Index Fund', 1427086.0, 62.545240668523185), ('Total Stock Market Index Fund', 3093520.0, 46.713397379174125)]
+2026-04-05 21:44:07,047 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 21:44:25,153 | INFO | src.tools.sql_query_tool | User Question: SELECT portfolio_name, SUM(CASE WHEN sector = 'Technology' THEN value ELSE 0 END) AS tech_value, (SUM(CASE WHEN sector = 'Technology' THEN value ELSE 0 END) / SUM(value)) * 100 AS tech_percentage FROM portfolio_data GROUP BY portfolio_name, SUM(value)
+2026-04-05 21:44:25,154 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT p.portfolio_name, SUM(CASE WHEN s.sector_id = 1 THEN h.quantity * se.current_price ELSE 0 END) AS tech_value, (SUM(CASE WHEN s.sector_id = 1 THEN h.quantity * se.current_price ELSE 0 END) / SUM(h.quantity * se.current_price)) * 100 AS tech_percentage FROM portfolios p JOIN holdings h ON p.portfolio_id = h.portfolio_id JOIN securities se ON h.security_id = se.security_id JOIN sectors s ON se.sector_id = s.sector_id WHERE se.asset_type = 'Stock' GROUP BY p.portfolio_name
+2026-04-05 21:44:25,157 | INFO | src.tools.sql_query_tool | Query Result: [('Balanced Portfolio', 388704.0, 50.33043982680395), ('Conservative Income Fund', 0, 0.0), ('Dividend Aristocrats Fund', 0, 0.0), ('ESG Sustainable Fund', 272978.0, 27.101907413217262), ('Emerging Markets Fund', 339095.0, 32.44617739929193), ('Growth Equity Fund', 1866148.0, 84.66527656037617), ('International Equity Fund', 346888.0, 47.20026995841769), ('Small Cap Value Fund', 0, 0.0), ('Tech Innovation Fund', 1565292.5, 100.0), ('Total International Index Fund', 1427086.0, 62.545240668523185), ('Total Stock Market Index Fund', 3093520.0, 46.713397379174125)]
+2026-04-05 22:25:22,477 | INFO | src.database.db_connection | Connecting to database at D:\Pl_Capitals_Assignment\portfolio-analytics-agent\data\db\portfolio_database.db
+2026-04-05 22:25:22,918 | INFO | src.database.db_connection | Database connected
+2026-04-05 22:25:22,919 | INFO | src.database.db_connection | Dialect: sqlite
+2026-04-05 22:25:22,919 | INFO | src.database.db_connection | Available tables: ['benchmarks', 'historical_prices', 'holdings', 'portfolio_performance', 'portfolios', 'risk_metrics', 'sectors', 'securities', 'transactions']
+2026-04-05 22:25:22,929 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:25:24,446 | INFO | src.tools.sql_query_tool | User Question: What is the total number of portfolios?
+2026-04-05 22:25:24,447 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT COUNT(portfolio_id) FROM portfolios;
+2026-04-05 22:25:24,451 | INFO | src.tools.sql_query_tool | Query Result: [(13,)]
+2026-04-05 22:25:24,454 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:25:25,614 | INFO | src.tools.sql_query_tool | User Question: What is the total number of portfolios?
+2026-04-05 22:25:25,615 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT COUNT(portfolio_id) FROM portfolios;
+2026-04-05 22:25:25,617 | INFO | src.tools.sql_query_tool | Query Result: [(13,)]
+2026-04-05 22:25:25,619 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:25:25,760 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:25:27,354 | INFO | src.tools.sql_query_tool | User Question: What are the names of all active portfolios?
+2026-04-05 22:25:27,355 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT portfolio_name FROM portfolios WHERE status = 'Active';
+2026-04-05 22:25:27,357 | INFO | src.tools.sql_query_tool | Query Result: [('Growth Equity Fund',), ('Conservative Income Fund',), ('Tech Innovation Fund',), ('Balanced Portfolio',), ('ESG Sustainable Fund',), ('Small Cap Value Fund',), ('International Equity Fund',), ('Fixed Income Plus',), ('Dividend Aristocrats Fund',), ('Emerging Markets Fund',)]
+2026-04-05 22:25:27,359 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:25:28,685 | INFO | src.tools.sql_query_tool | User Question: What are the names of all active portfolios?
+2026-04-05 22:25:28,686 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT portfolio_name FROM portfolios WHERE status = 'Active';
+2026-04-05 22:25:28,687 | INFO | src.tools.sql_query_tool | Query Result: [('Growth Equity Fund',), ('Conservative Income Fund',), ('Tech Innovation Fund',), ('Balanced Portfolio',), ('ESG Sustainable Fund',), ('Small Cap Value Fund',), ('International Equity Fund',), ('Fixed Income Plus',), ('Dividend Aristocrats Fund',), ('Emerging Markets Fund',)]
+2026-04-05 22:25:28,689 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:25:29,223 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:25:42,640 | INFO | src.tools.sql_query_tool | User Question: Which securities are in the Technology sector?
+2026-04-05 22:25:42,641 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT symbol, company_name FROM securities WHERE sector_id IN (SELECT sector_id FROM sectors WHERE sector_name = 'Technology')
+2026-04-05 22:25:42,645 | INFO | src.tools.sql_query_tool | Query Result: [('AAPL', 'Apple Inc.'), ('MSFT', 'Microsoft Corporation'), ('GOOGL', 'Alphabet Inc.'), ('META', 'Meta Platforms Inc.'), ('NVDA', 'NVIDIA Corporation'), ('AVGO', 'Broadcom Inc.'), ('CRM', 'Salesforce Inc.'), ('ORCL', 'Oracle Corporation')]
+2026-04-05 22:25:42,648 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:25:46,052 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:26:00,579 | INFO | src.tools.sql_query_tool | User Question: What is the total Assets Under Management (AUM) for portfolios with high target risk level?
+2026-04-05 22:26:00,579 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT SUM(total_aum) FROM portfolios WHERE target_risk_level = 'High';
+2026-04-05 22:26:00,580 | INFO | src.tools.sql_query_tool | Query Result: [(85000000.0,)]
+2026-04-05 22:26:00,581 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:26:02,873 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:26:18,792 | INFO | src.tools.sql_query_tool | User Question: top 5 holdings by cost basis in the Growth Equity Fund
+2026-04-05 22:26:18,793 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT T1.security_id, T2.company_name, T1.cost_basis FROM holdings AS T1 INNER JOIN securities AS T2 ON T1.security_id = T2.security_id INNER JOIN portfolios AS T3 ON T1.portfolio_id = T3.portfolio_id WHERE T3.portfolio_name = 'Growth Equity Fund' ORDER BY T1.cost_basis DESC LIMIT 5;
+2026-04-05 22:26:18,795 | INFO | src.tools.sql_query_tool | Query Result: [(1, 'Apple Inc.', 438000.0), (4, 'Amazon.com Inc.', 320000.0), (2, 'Microsoft Corporation', 304400.0), (7, 'NVIDIA Corporation', 288040.0), (19, 'Salesforce Inc.', 185400.0)]
+2026-04-05 22:26:18,797 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:26:34,493 | INFO | src.tools.sql_query_tool | User Question: top 5 holdings by cost basis in the Growth Equity Fund
+2026-04-05 22:26:34,494 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT T1.security_id, T2.company_name, T2.symbol, T1.cost_basis FROM holdings AS T1 INNER JOIN securities AS T2 ON T1.security_id = T2.security_id INNER JOIN portfolios AS T3 ON T1.portfolio_id = T3.portfolio_id WHERE T3.portfolio_name = 'Growth Equity Fund' ORDER BY T1.cost_basis DESC LIMIT 5;
+2026-04-05 22:26:34,496 | INFO | src.tools.sql_query_tool | Query Result: [(1, 'Apple Inc.', 'AAPL', 438000.0), (4, 'Amazon.com Inc.', 'AMZN', 320000.0), (2, 'Microsoft Corporation', 'MSFT', 304400.0), (7, 'NVIDIA Corporation', 'NVDA', 288040.0), (19, 'Salesforce Inc.', 'CRM', 185400.0)]
+2026-04-05 22:26:34,497 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:26:38,965 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:26:53,682 | INFO | src.tools.sql_query_tool | User Question: average current price of securities in each sector
+2026-04-05 22:26:53,683 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT T1.sector_name, AVG(T2.current_price) AS average_current_price FROM sectors T1 INNER JOIN securities T2 ON T1.sector_id = T2.sector_id WHERE T2.asset_type = 'Stock' GROUP BY T1.sector_name
+2026-04-05 22:26:53,685 | INFO | src.tools.sql_query_tool | Query Result: [('Automotive', 248.5), ('Consumer Discretionary', 3380.0), ('Consumer Staples', 173.8625), ('Energy', 128.575), ('Financials', 201.2125), ('Healthcare', 285.17), ('Technology', 719.245)]
+2026-04-05 22:26:53,688 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:26:57,257 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:27:13,001 | INFO | src.tools.sql_query_tool | User Question: SELECT portfolio_name, SUM(CASE WHEN sector = 'Technology' THEN value ELSE 0 END) AS tech_value, SUM(value) AS total_value, (SUM(CASE WHEN sector = 'Technology' THEN value ELSE 0 END) / SUM(value)) * 100 AS tech_percentage FROM portfolio_data GROUP BY portfolio_name
+2026-04-05 22:27:13,002 | INFO | src.tools.sql_query_tool | Generated SQL: SELECT p.portfolio_name, SUM(CASE WHEN s.sector_id IN (SELECT sector_id FROM sectors WHERE sector_name = 'Technology') THEN h.quantity * se.current_price ELSE 0 END) AS tech_value, SUM(h.quantity * se.current_price) AS total_value, (SUM(CASE WHEN s.sector_id IN (SELECT sector_id FROM sectors WHERE sector_name = 'Technology') THEN h.quantity * se.current_price ELSE 0 END) / SUM(h.quantity * se.current_price)) * 100 AS tech_percentage FROM holdings h JOIN portfolios p ON h.portfolio_id = p.portfolio_id JOIN securities s ON h.security_id = s.security_id JOIN sectors se ON s.sector_id = se.sector_id JOIN securities se2 ON h.security_id = se2.security_id GROUP BY p.portfolio_name
+2026-04-05 22:27:13,004 | ERROR | src.tools.sql_query_tool | SQL execution failed: (sqlite3.OperationalError) no such column: se.current_price
+[SQL: SELECT p.portfolio_name, SUM(CASE WHEN s.sector_id IN (SELECT sector_id FROM sectors WHERE sector_name = 'Technology') THEN h.quantity * se.current_price ELSE 0 END) AS tech_value, SUM(h.quantity * se.current_price) AS total_value, (SUM(CASE WHEN s.sector_id IN (SELECT sector_id FROM sectors WHERE sector_name = 'Technology') THEN h.quantity * se.current_price ELSE 0 END) / SUM(h.quantity * se.current_price)) * 100 AS tech_percentage FROM holdings h JOIN portfolios p ON h.portfolio_id = p.portfolio_id JOIN securities s ON h.security_id = s.security_id JOIN sectors se ON s.sector_id = se.sector_id JOIN securities se2 ON h.security_id = se2.security_id GROUP BY p.portfolio_name]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-04-05 22:27:13,008 | INFO | src.agent.langgraph_workflow | Running LLM node
+2026-04-05 22:28:05,564 | INFO | src.database.db_connection | Connecting to database at D:\Pl_Capitals_Assignment\portfolio-analytics-agent\data\db\portfolio_database.db
+2026-04-05 22:28:05,621 | INFO | src.database.db_connection | Database connected
+2026-04-05 22:28:05,622 | INFO | src.database.db_connection | Dialect: sqlite
+2026-04-05 22:28:05,623 | INFO | src.database.db_connection | Available tables: ['benchmarks', 'historical_prices', 'holdings', 'portfolio_performance', 'portfolios', 'risk_metrics', 'sectors', 'securities', 'transactions']
+2026-04-05 22:28:05,631 | INFO | src.agent.langgraph_workflow | Running LLM node
