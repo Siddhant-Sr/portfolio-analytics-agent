@@ -68,10 +68,7 @@ def compare_results(agent_result, expected_result):
     return agent_norm == expected_norm
 
 
-# -----------------------------
-# Run Evaluation
-# -----------------------------
-def run_evaluation():
+def evaluate_dataset():
 
     base_dir = Path(__file__).resolve().parents[2]
 
@@ -88,12 +85,9 @@ def run_evaluation():
 
     total = len(questions)
     correct = 0
+    rows = []
 
     logger.info("Starting evaluation for %d questions", total)
-
-    print("\n" + "=" * 80)
-    print("PORTFOLIO AGENT EVALUATION")
-    print("=" * 80)
 
     for item in questions:
 
@@ -103,18 +97,12 @@ def run_evaluation():
 
         logger.info("Evaluating Question %s", qid)
 
-        # -----------------------------
-        # Run Agent
-        # -----------------------------
         response = agent.invoke(
             {"messages": [("user", question)]}
         )
 
         generated_sql, agent_result = extract_tool_output(response["messages"])
 
-        # -----------------------------
-        # Run Ground Truth SQL
-        # -----------------------------
         try:
             expected_result = db.run(ground_truth_sql)
             expected_result = ast.literal_eval(expected_result)
@@ -122,39 +110,75 @@ def run_evaluation():
             logger.error("Ground truth SQL execution failed: %s", str(e))
             expected_result = []
 
-        # -----------------------------
-        # Compare Results
-        # -----------------------------
         is_correct = compare_results(agent_result, expected_result)
 
         if is_correct:
             correct += 1
 
+        rows.append(
+            {
+                "id": qid,
+                "question": question,
+                "generated_sql": generated_sql,
+                "ground_truth_sql": ground_truth_sql,
+                "agent_result": agent_result,
+                "expected_result": expected_result,
+                "is_correct": is_correct,
+            }
+        )
+
+    accuracy = (correct / total) * 100 if total else 0.0
+
+    logger.info("Evaluation completed")
+
+    return {
+        "total": total,
+        "correct": correct,
+        "accuracy": accuracy,
+        "rows": rows,
+    }
+
+
+# -----------------------------
+# Run Evaluation
+# -----------------------------
+def run_evaluation():
+
+    evaluation = evaluate_dataset()
+
+    total = evaluation["total"]
+    correct = evaluation["correct"]
+    accuracy = evaluation["accuracy"]
+
+    print("\n" + "=" * 80)
+    print("PORTFOLIO AGENT EVALUATION")
+    print("=" * 80)
+
+    for row in evaluation["rows"]:
+
         # -----------------------------
         # Print Comparison
         # -----------------------------
         print("\n" + "-" * 80)
-        print(f"Question {qid}: {question}")
+        print(f"Question {row['id']}: {row['question']}")
 
         print("\nGenerated SQL:")
-        print(generated_sql)
+        print(row["generated_sql"])
 
         print("\nGround Truth SQL:")
-        print(ground_truth_sql)
+        print(row["ground_truth_sql"])
 
         print("\nAgent Result:")
-        print(agent_result)
+        print(row["agent_result"])
 
         print("\nExpected Result:")
-        print(expected_result)
+        print(row["expected_result"])
 
-        print("\nResult:", "Correct" if is_correct else "Incorrect")
+        print("\nResult:", "Correct" if row["is_correct"] else "Incorrect")
 
     # -----------------------------
     # Summary
     # -----------------------------
-    accuracy = (correct / total) * 100
-
     print("\n" + "=" * 80)
     print("EVALUATION SUMMARY")
     print("=" * 80)
@@ -162,5 +186,3 @@ def run_evaluation():
     print(f"Total Questions : {total}")
     print(f"Correct Answers : {correct}")
     print(f"Accuracy        : {accuracy:.2f}%")
-
-    logger.info("Evaluation completed")
